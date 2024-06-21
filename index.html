@@ -94,12 +94,15 @@
               @group(0) @binding(0) var<uniform> grid: vec2f;
               @group(0) @binding(1) var<storage> cellState: array<u32>;
               @vertex
-              fn vertexMain(input:VertexInput) ->VertexOutput {
-                let i = f32(input.instance);
+              fn vertexMain(@location(0) pos: vec2f,
+                            @builtin(instance_index) instance: u32) -> VertexOutput {
+                let i = f32(instance);
                 let cell = vec2f(i % grid.x, floor( i / grid.x ));
+                let state = f32(cellState[instance]);
 
                 let cellOffset = cell / grid * 2;
-                let gridPos = (input.pos + 1) / grid - 1 + cellOffset;
+                let gridPos = (pos*state+1) / grid - 1 + cellOffset;
+
                 var output:VertexOutput;
                 output.pos = vec4f(gridPos,0,1);
                 output.cell = cell;
@@ -137,6 +140,11 @@
           {
             binding: 0,
             resource: { buffer: uniformBuffer },
+          },
+          // New entry!
+          {
+            binding: 1,
+            resource: { buffer: cellStateStorage },
           },
         ],
       });
